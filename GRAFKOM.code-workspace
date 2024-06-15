@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "../GRAFKOM"
+		},
+		{
+			"path": "C:/Users/ACER/Downloads/testing"
+		},
+		{
+			"path": "C:/Users/ACER/Downloads/PROJEK-UTS-GRAFKOM"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "C:/Users/ACER/Downloads/ThirdPersonDemo-main"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "chess-engine-nn"
+	}
+}
