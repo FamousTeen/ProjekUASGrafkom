@@ -1,9 +1,6 @@
 {
 	"folders": [
 		{
-			"path": "../GRAFKOM"
-		},
-		{
 			"path": "C:/Users/ACER/Downloads/testing"
 		},
 		{
@@ -14,6 +11,9 @@
 		},
 		{
 			"path": "C:/Users/ACER/Downloads/ThirdPersonDemo-main"
+		},
+		{
+			"path": "../../GRAFKOM"
 		}
 	],
 	"settings": {
