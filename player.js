@@ -24,8 +24,6 @@ export class Player{
         // this.mesh.receiveShadow = true;
 
         this.loadModel();
-        
-        
     }
 
     loadModel(){
@@ -55,116 +53,121 @@ export class Player{
             const loader = new FBXLoader();
             loader.setPath('./resources_3person/Knight/');
             loader.load('Great Sword Idle.fbx', (fbx) => { onLoad('idle', fbx) });
-            loader.load('Great Sword Run.fbx', (fbx) => { onLoad('run', fbx) });
-            loader.load('Great Sword Jump.fbx', (fbx) => { onLoad('jump', fbx) });
             
-        });
+            loader.load('Great Sword Run.fbx', (fbx) => { onLoad('run', fbx) });
 
+            loader.load('Great Sword Jump.fbx', (fbx) => { onLoad('jump', fbx) });
+        });
     }
 
     update(dt){
         if(this.mesh && this.animations){
-        this.lastRotation = this.mesh.rotation.y;
-        var direction = new THREE.Vector3(0,0,0);
+            this.lastRotation = this.mesh.rotation.y;
+            var direction = new THREE.Vector3(0,0,0);
 
-        // if(this.controller.keys['forward']){
-        //     direction.x = 1;
-        //     this.mesh.rotation.y = Math.PI/2;
-        // }
-        var isJump = false
-
-        if(this.controller.keys['forward']){
-            direction.x = 1;
-            this.mesh.rotation.y = Math.PI/2;
-        }
-        if(this.controller.keys['backward']){
-            direction.x = -1;
-            this.mesh.rotation.y = -Math.PI/2;
-        }
-        if(this.controller.keys['left']){
-            direction.z = -1;
-            this.mesh.rotation.y = Math.PI;
-        }
-        if(this.controller.keys['right']){
-            direction.z = 1;
-            this.mesh.rotation.y = 0;
-        }
-        if(this.controller.keys['space']){
-            isJump == true
-            direction.y = 1;
-            this.mesh.position.y = 1;
-        }
-        else if(!(this.controller.keys['space']) && isJump == true){
-            direction.y = 1;
-            this.mesh.position.y = -1;
-            isJump = false;
-        }
-
-        this.lastRotation = this.mesh.rotation.y;
-        console.log(direction.length())
-        if(direction.length() == 0){
-            if(this.animations['idle']){
-                if(this.state != "idle"){
-                    this.mixer.stopAllAction();
-                    this.state = "idle";
-                } 
-                this.mixer.clipAction(this.animations['idle'].clip).play();
+            if(this.controller.keys['forward']){
+                direction.x = 1;
+                this.mesh.rotation.y = Math.PI/2;
             }
-        }
-        else if(direction.y > 0){
-            if(this.animations['jump']){
-                if(this.state != "jump"){
-                    this.mixer.stopAllAction();
-                    this.state = "jump";
-                } 
-                this.mixer.clipAction(this.animations['jump'].clip).play();
+            if(this.controller.keys['backward']){
+                direction.x = -1;
+                this.mesh.rotation.y = -Math.PI/2;
             }
-        }
-        else{
-            if(this.animations['run']){
-                if(this.state != "run"){
-                    this.mixer.stopAllAction();
-                    this.state = "run";
+            if(this.controller.keys['left']){
+                direction.z = -1;
+                this.mesh.rotation.y = Math.PI;
+            }
+            if(this.controller.keys['right']){
+                direction.z = 1;
+                this.mesh.rotation.y = 0;
+            }
+            if(this.controller.keys['space']){
+                direction.y = 1;
+                this.mesh.position.y = 1;
+            }
+            else if(!(this.controller.keys['space'])){
+                direction.y = 0;
+                this.mesh.position.y = -1;
+            }
+
+            this.lastRotation = this.mesh.rotation.y;
+            // console.log(direction.y);
+
+            if(direction.y > 0){
+                if(this.animations['jump']){
+                    if(this.state != "jump"){
+                        this.mixer.stopAllAction();
+                        this.state = "jump";
+                    } 
+                    this.mixer.clipAction(this.animations['jump'].clip).play();
                 }
-                this.mixer.clipAction(this.animations['run'].clip).play();
             }
-        }
+            else if(!(direction.y > 0)){
+                if (this.state != "run") {
+                    if(this.animations['idle']){
+                        if(this.state != "idle"){
+                            this.mixer.stopAllAction();
+                            this.state = "idle";
+                        } 
+                        this.mixer.clipAction(this.animations['idle'].clip).play();
+                    }
+                }
+            }
 
-        if(this.controller.mouseDown)
+            if(direction.x == 0 && direction.z == 0){
+                if (this.state != "jump") {
+                    if(this.animations['idle']){
+                        if(this.state != "idle"){
+                            this.mixer.stopAllAction();
+                            this.state = "idle";
+                        } 
+                        this.mixer.clipAction(this.animations['idle'].clip).play();
+                    }
+                }
+            }
+            else if (!(direction.x == 0) || !(direction.z == 0)){
+                if(this.animations['run']){
+                    if(this.state != "run"){
+                        this.mixer.stopAllAction();
+                        this.state = "run";
+                    }
+                    this.mixer.clipAction(this.animations['run'].clip).play();
+                }
+            }
+
+            if(this.controller.mouseDown)
             {
                 var dtMouse = this.controller.deltaMousePos;
                 dtMouse.x = dtMouse.x / Math.PI;
                 dtMouse.y = dtMouse.y / Math.PI;
-    
-                this.rotationVector.y += dtMouse.x * dt * 10;
-                this.rotationVector.z += dtMouse.y * dt * 10;
-                
+
+                this.rotationVector.y += dtMouse.x * dt * 100;
+                this.rotationVector.z += dtMouse.y * dt * 100;
             }
-            this.mesh.rotation.y += this.rotationVector.y;
 
-        var forwardVector = new THREE.Vector3(1,0,0);
-        var rightVector = new THREE.Vector3(0,0,1);
-        var upVector = new THREE.Vector3(0,1,0);
-        forwardVector.applyAxisAngle(new THREE.Vector3(0,1,0), this.rotationVector.y);
-        rightVector.applyAxisAngle(new THREE.Vector3(0,1,0), this.rotationVector.y);
+            var forwardVector = new THREE.Vector3(1,0,0);
+            var rightVector = new THREE.Vector3(0,0,1);
+            var upVector = new THREE.Vector3(0,1,0);
+            forwardVector.applyAxisAngle(new THREE.Vector3(0,1,0), this.rotationVector.y);
+            rightVector.applyAxisAngle(new THREE.Vector3(0,1,0), this.rotationVector.y);
 
-        this.mesh.position.add(forwardVector.multiplyScalar(dt*this.speed*direction.x));
-        this.mesh.position.add(rightVector.multiplyScalar(dt*this.speed*direction.z));
-        this.mesh.position.add(upVector.multiplyScalar(dt*this.speed*direction.y));
-        
-        this.camera.setup(this.mesh.position, this.rotationVector);
+            this.mesh.position.add(forwardVector.multiplyScalar(dt * this.speed * direction.x));
+            this.mesh.position.add(rightVector.multiplyScalar(dt * this.speed * direction.z));
+            this.mesh.position.add(upVector.multiplyScalar(dt * this.speed * direction.y));
 
-        if(this.mixer){
-            this.mixer.update(dt);
-        }
+            // this.camera.positionOffSet.x = this.controller.scrollPosition;
 
+            this.camera.setup(this.mesh.position, this.rotationVector);
+
+            if(this.mixer){
+                this.mixer.update(dt);
+            }
         }
     }
-
 }
 
-export class PlayerController{
 
+export class PlayerController{
     constructor(){
         this.keys = {
             "forward": false,
@@ -172,16 +175,20 @@ export class PlayerController{
             "left": false,
             "right": false,
             "space": false
-        }
+        };
         this.mousePos = new THREE.Vector2();
         this.mouseDown = false;
         this.deltaMousePos = new THREE.Vector2();
+        this.scrollPosition = 0;
+
         document.addEventListener('keydown', (e) => this.onKeyDown(e), false);
         document.addEventListener('keyup', (e) => this.onKeyUp(e), false);
         document.addEventListener('mousemove', (e) => this.onMouseMove(e), false);
         document.addEventListener('mousedown', (e) => this.onMouseDown(e), false);
         document.addEventListener('mouseup', (e) => this.onMouseUp(e), false);
+        // document.addEventListener('scroll', (e) => this.onScroll(e), false);
     }
+    
     onMouseDown(event){
         this.mouseDown = true;
     }
@@ -238,23 +245,28 @@ export class PlayerController{
                 this.keys['right'] = false;
                 break;
             case " ".charCodeAt(0):
-                this.mesh.position.y = -1;
                 this.keys['space'] = false;
                 break;
         }    
     }
-
+    onScroll(event){
+        // event.preventDefault();
+        this.scrollPosition += event.deltaY;
+    }
 }
 
-export class ThirdPersonCamera{
+
+export class ThirdPersonCamera {
     constructor(camera, positionOffSet, targetOffSet){
         this.camera = camera;
         this.positionOffSet = positionOffSet;
         this.targetOffSet = targetOffSet;
     }
-    setup(target, angle){
+
+    setup(target, angle, scrollOffset){
         var temp = new THREE.Vector3(0,0,0);
         temp.copy(this.positionOffSet);
+        temp.x += scrollOffset; // Apply scroll offset to X-axis
         temp.applyAxisAngle(new THREE.Vector3(angle.x,1,0), angle.y);
         temp.applyAxisAngle(new THREE.Vector3(angle.y,0,1), angle.z);
         temp.addVectors(target, temp);
