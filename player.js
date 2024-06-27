@@ -13,7 +13,7 @@ export class Player {
         this.animations = {};
         this.lastRotation = 0;
 
-        this.camera.setup(new THREE.Vector3(0, 0, 0), this.rotationVector, this.controller.scaleZ);
+        this.camera.setup(new THREE.Vector3(0, 0, 0), this.rotationVector, this.controller.scaleX);
 
         this.loadModel();
     }
@@ -149,7 +149,7 @@ export class Player {
             this.mesh.position.add(rightVector.multiplyScalar(dt * this.speed * direction.z));
             this.mesh.position.add(upVector.multiplyScalar(dt * this.speed * direction.y));
 
-            this.camera.setup(this.mesh.position, this.rotationVector, this.controller.scaleZ);
+            this.camera.setup(this.mesh.position, this.rotationVector, this.controller.scaleX);
 
             if (this.mixer) {
                 this.mixer.update(dt);
@@ -172,14 +172,18 @@ export class PlayerController {
         }
         this.mousePos = new THREE.Vector2();
         this.mouseDown = false;
-        this.scaleZ = 0;
+        this.scaleX = 0;
         this.deltaMousePos = new THREE.Vector2();
         document.addEventListener('keydown', (e) => this.onKeyDown(e), false);
         document.addEventListener('keyup', (e) => this.onKeyUp(e), false);
         document.addEventListener('mousemove', (e) => this.onMouseMove(e), false);
         document.addEventListener('mousedown', (e) => this.onMouseDown(e), false);
         document.addEventListener('mouseup', (e) => this.onMouseUp(e), false);
-        document.addEventListener('wheel', (event) => this.onWheel(event), false);
+        document.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            // Adjust scaleX based on wheel delta
+            this.scaleX += Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+        }, false);
     }
 
     onMouseDown(event) {
@@ -242,11 +246,6 @@ export class PlayerController {
                 break;
         }
     }
-    onWheel(event) {
-        event.preventDefault();
-        // Adjust scaleZ based on wheel delta
-        this.scaleZ += Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
-    }
 }
 
 
@@ -258,10 +257,10 @@ export class ThirdPersonCamera {
         this.targetOffSet = targetOffSet;
     }
 
-    setup(target, angle, scaleZ) {
+    setup(target, angle, scaleX) {
         var temp = new THREE.Vector3(0, 0, 0);
         temp.copy(this.positionOffSet);
-        temp.x += scaleZ; // Apply the scaleZ value here
+        temp.x += scaleX; 
         temp.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle.y);
         temp.applyAxisAngle(new THREE.Vector3(0, 0, 1), angle.z);
         temp.addVectors(target, temp);
