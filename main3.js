@@ -133,6 +133,8 @@ class Main{
             false
         );
 
+        this.player2   
+
         //Object
         // this.mesh = new THREE.Mesh(
         //     new THREE.BoxGeometry(1,1,1),

@@ -54,7 +54,11 @@ export class Player {
 
             loader.load('Great Sword Run.fbx', (fbx) => { onLoad('run', fbx) });
 
-            loader.load('Great Sword Jump.fbx', (fbx) => { onLoad('jump', fbx) });
+            loader.load('Great Sword Slash.fbx', (fbx) => { onLoad('attack', fbx) });
+
+            loader.load('Victory.fbx', (fbx) => { onLoad('win', fbx) });
+            
+            loader.load('Two Handed Sword Death.fbx', (fbx) => { onLoad('lose', fbx) });
         });
     }
 
@@ -82,8 +86,36 @@ export class Player {
 
             this.lastRotation = this.mesh.rotation.y;
 
-            if (direction.x == 0 && direction.z == 0) {
-                if (this.state != "jump") {
+            console.log(this.state)
+
+            if (this.controller.atk == true) {
+                if (this.animations['attack']) {
+                    if (this.state != "attack") {
+                        this.mixer.stopAllAction();
+                        this.state = "attack";
+                    }
+                    this.mixer.clipAction(this.animations['attack'].clip).play();
+                }
+            } else if (this.controller.win == true) {
+                if (this.animations['win']) {
+                    if (this.state != "win") {
+                        this.mixer.stopAllAction();
+                        this.state = "win";
+                    }
+                    this.mixer.clipAction(this.animations['win'].clip).play();
+                }
+            } 
+            else if (this.controller.lose == true) {
+                if (this.animations['lose']) {
+                    if (this.state != "lose") {
+                        this.mixer.stopAllAction();
+                        this.state = "lose";
+                    }
+                    this.mixer.clipAction(this.animations['lose'].clip).play();
+                }
+            } 
+            else if (direction.x == 0 && direction.z == 0) {
+                if(this.state != "attack" || this.state != "win") {
                     if (this.animations['idle']) {
                         if (this.state != "idle") {
                             this.mixer.stopAllAction();
@@ -101,6 +133,9 @@ export class Player {
                     this.mixer.clipAction(this.animations['run'].clip).play();
                 }
             }
+
+            
+            
 
             if (this.controller.mouseDown) {
                 var dtMouse = this.controller.deltaMousePos;
@@ -179,6 +214,9 @@ export class PlayerController {
         this.rotateYRight = false
         this.arrowLeft = false;
         this.arrowRight = false;
+        this.atk = false;
+        this.win = false;
+        this.lose = false;
         this.scaleX = 30;
         this.deltaMousePos = new THREE.Vector2();
         document.addEventListener('keydown', (e) => this.onKeyDown(e), false);
@@ -252,6 +290,18 @@ export class PlayerController {
                 event.preventDefault();
                 this.rotateYRight = true;
                 break;
+            case 69: // E key
+                event.preventDefault();
+                this.atk = true;
+                break;
+            case 32: // Space bar
+                event.preventDefault();
+                this.win = true;
+                break;
+            case 84: // Space bar
+                event.preventDefault();
+                this.lose = true;
+                break;
         }
     }
     onKeyUp(event) {
@@ -295,6 +345,18 @@ export class PlayerController {
             case 80: // P key
                 event.preventDefault();
                 this.rotateYRight = false;
+                break;
+            case 69: // E key
+                event.preventDefault();
+                this.atk = false;
+                break;
+            case 32: // Space bar
+                event.preventDefault();
+                this.win = false;
+                break;
+            case 84: // T Key
+                event.preventDefault();
+                this.lose = false;
                 break;
         }
     }
