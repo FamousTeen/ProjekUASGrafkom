@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { Player, PlayerController, ThirdPersonCamera } from "./player.js";
 import { Player2, PlayerController2, ThirdPersonCamera2 } from "./player2.js";
-import { Player2, PlayerController3, ThirdPersonCamera3 } from "./player3.js";
+import { Player3, PlayerController3, ThirdPersonCamera3 } from "./player3.js";
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
