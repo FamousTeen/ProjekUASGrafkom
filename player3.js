@@ -25,8 +25,8 @@ export class Player3 {
 
     loadModel() {
         var loader = new FBXLoader();
-        loader.setPath('./resources_3person/Knight/Monster king/');
-        loader.load('Mutant Breathing Idle.fbx', (fbx) => {
+        loader.setPath('./resources_3person/Knight/Monster 1/');
+        loader.load('monster1 idle.fbx', (fbx) => {
             fbx.scale.setScalar(0.007);
             fbx.traverse(c => {
                 c.castShadow = true;
@@ -49,16 +49,16 @@ export class Player3 {
             };
 
             const loader = new FBXLoader();
-            loader.setPath('./resources_3person/Knight/Monster king/');
-            loader.load('Mutant Breathing Idle.fbx', (fbx) => { onLoad('idle', fbx) });
+            loader.setPath('./resources_3person/Knight/Monster 1/');
+            loader.load('monster1 idle.fbx', (fbx) => { onLoad('idle', fbx) });
 
-            loader.load('Mutant Breathing Idle.fbx', (fbx) => { onLoad('run', fbx) });
+            loader.load('monster1 running.fbx', (fbx) => { onLoad('run', fbx) });
 
-            loader.load('Mutant Swiping attack.fbx', (fbx) => { onLoad('attack', fbx) });
+            loader.load('monster1 attack.fbx', (fbx) => { onLoad('attack', fbx) });
 
-            loader.load('Mutant Roaring celebration.fbx', (fbx) => { onLoad('win', fbx) });
+            // loader.load('Mutant Roaring celebration.fbx', (fbx) => { onLoad('win', fbx) });
             
-            loader.load('Mutant Flexing Muscles.fbx', (fbx) => { onLoad('lose', fbx) });
+            loader.load('monster death.fbx', (fbx) => { onLoad('lose', fbx) });
         });
     }
 
