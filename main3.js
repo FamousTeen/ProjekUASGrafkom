@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Player, PlayerController, ThirdPersonCamera } from "./player.js";
 import { Player2, PlayerController2, ThirdPersonCamera2 } from "./player2.js";
+import { Player2, PlayerController3, ThirdPersonCamera3 } from "./player3.js";
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -139,6 +140,17 @@ class Main{
                 this.camera, new THREE.Vector3(-5, 2, 0), new THREE.Vector3(0, 0, 0), false, false, false, []
             ),
             new PlayerController2(),
+            this.scene,
+            5, 
+            false, 
+            false
+        );   
+
+        this.player3 = new Player3(
+            new ThirdPersonCamera3(
+                this.camera, new THREE.Vector3(-5, 2, 0), new THREE.Vector3(0, 0, 0), false, false, false, []
+            ),
+            new PlayerController3(),
             this.scene,
             5, 
             false, 
