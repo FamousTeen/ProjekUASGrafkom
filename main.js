@@ -113,7 +113,7 @@ const onProgress = function ( xhr ) {
 };
 
 // MTL LOADER
-load a resource
+// load a resource
 new MTLLoader()
 					.setPath( 'resources/' )
 					.load( 'magic_book_OBJ.mtl', function ( materials ) {

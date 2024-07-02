@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Player, PlayerController, ThirdPersonCamera } from "./player.js";
+import { Player2, PlayerController2, ThirdPersonCamera2 } from "./player2.js";
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -124,7 +125,7 @@ class Main{
         // ThirdPersonCamera
         this.player = new Player(
             new ThirdPersonCamera(
-                this.camera, new THREE.Vector3(-5,2,0), new THREE.Vector3(0, 0, 0), false, false, false, []
+                this.camera, new THREE.Vector3(-5, 2, 0), new THREE.Vector3(0, 0, 0), false, false, false, []
             ),
             new PlayerController(),
             this.scene,
@@ -133,7 +134,18 @@ class Main{
             false
         );
 
-        this.player2   
+        this.player2 = new Player2(
+            new ThirdPersonCamera2(
+                this.camera, new THREE.Vector3(-5, 2, 0), new THREE.Vector3(0, 0, 0), false, false, false, []
+            ),
+            new PlayerController2(),
+            this.scene,
+            5, 
+            false, 
+            false
+        );   
+
+        this.activePlayer = this.player;
 
         //Object
         // this.mesh = new THREE.Mesh(
@@ -145,34 +157,46 @@ class Main{
         // this.mesh.receiveShadow = true;
         // this.mesh.position.set(3,0,0);
 
-        this.onKeyDown = function(event){
-            switch(event.keyCode){
-                case 49:
-                    this.player.camera1 = true;
-                    this.player.camera2 = false;
-                    this.player.camera.cameraBool = true;
-                    this.player.camera.cameraBool2 = false;
+        this.onKeyDown = function(event) {
+            switch (event.keyCode) {
+                case 49: // Key '1'
+                    this.activePlayer.camera1 = true;
+                    this.activePlayer.camera2 = false;
+                    this.activePlayer.camera.cameraBool = true;
+                    this.activePlayer.camera.cameraBool2 = false;
                     break;
-                case 50:
-                    this.player.camera1 = false;
-                    this.player.camera2 = true;
-                    this.player.camera.cameraBool = false;
-                    this.player.camera.cameraBool2 = true;
+                case 50: // Key '2'
+                    this.activePlayer.camera1 = false;
+                    this.activePlayer.camera2 = true;
+                    this.activePlayer.camera.cameraBool = false;
+                    this.activePlayer.camera.cameraBool2 = true;
                     break;
+                case 66: // Key 'b'
+                    this.switchPlayer();
+                    break;
+            }
+        }
+
+        this.switchPlayer = function() {
+            if (this.activePlayer === this.player) {
+                this.activePlayer = this.player2;
+            } else {
+                this.activePlayer = this.player;
             }
         }
 
         document.addEventListener('keydown', (e) => this.onKeyDown(e), false);
     }
-    static render(dt){
-        this.player.update(dt);
+
+    static render(dt) {
+        this.activePlayer.update(dt);
         this.renderer.render(this.scene, this.camera);
     }
 }
 
 var clock = new THREE.Clock();
 Main.init();
-function animate(){
+function animate() {
     Main.render(clock.getDelta());
     requestAnimationFrame(animate);
 }
