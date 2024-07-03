@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import gsap from 'gsap';
+import * as CANNON from 'cannon-es'; 
 
 export class Player {
-    constructor(camera, controller, scene, speed, isCamera1, isCamera2) {
+    constructor(camera, controller, scene, speed, isCamera1, isCamera2, world) {
         this.camera = camera;
         this.controller = controller;
         this.scene = scene;
@@ -15,12 +16,24 @@ export class Player {
         this.rotationVector2 = new THREE.Vector3(0, 0, 0);
         this.animations = {};
         this.lastRotation = 0;
+        this.world = world;
+        this.physicsBody = null;
+        this.isCollideRight = false;
+        this.isCollideLeft = false;
+        this.physicsBodyColl = null;
 
         if (this.camera instanceof ThirdPersonCamera) {
             this.camera.setup(new THREE.Vector3(0, 0, 0), this.rotationVector, this.controller.scaleX);
         }
 
         this.loadModel();
+    }
+
+    getPosition() {
+        if (this.mesh) {
+            return this.mesh.position;
+        }
+        return null;
     }
 
     loadModel() {
@@ -34,7 +47,7 @@ export class Player {
             this.mesh = fbx;
             this.scene.add(this.mesh);
             this.mesh.rotation.y += Math.PI / 2;
-            this.mesh.position.z -= 7;
+            this.mesh.position.z -= 6;
             this.mesh.position.y += 0.4;
             this.mixer = new THREE.AnimationMixer(this.mesh);
 
@@ -59,7 +72,77 @@ export class Player {
             loader.load('Victory.fbx', (fbx) => { onLoad('win', fbx) });
             
             loader.load('Two Handed Sword Death.fbx', (fbx) => { onLoad('lose', fbx) });
+
+            this.createPlayerBox();
         });
+    }
+
+    createPlayerBox() {
+        const boxGeo = new THREE.BoxGeometry(0.7, 1.2, 0.6);
+        const boxMat = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+            wireframe: true,
+            transparent: true,
+            opacity: 0,
+            depthTest: false,
+            depthWrite: false 
+        });
+        this.boxMesh = new THREE.Mesh(boxGeo, boxMat);
+        this.scene.add(this.boxMesh);
+    
+        const boxShape = new CANNON.Box(new CANNON.Vec3(0.7, 1.2, 0.6)); // 1/2 dari boxGeo
+        const boxPhysMat = new CANNON.Material();
+        this.physicsBody = new CANNON.Body({
+            mass: 1,
+            shape: boxShape,
+            position: new CANNON.Vec3(this.mesh.position.x, this.mesh.position.y + 1,this.mesh.position.z), 
+            material: boxPhysMat
+        });
+        this.physicsBody.angularDamping = 0.5;
+        this.physicsBody.fixedRotation = true;
+        this.physicsBody.updateMassProperties();
+    
+        this.world.addBody(this.physicsBody);
+
+        this.physicsBody.addEventListener('collide', (event) => {
+            console.log('Player collided with:', event.body.id);
+            if (event.body.id == 2 || event.body.id == 3) {
+                this.isCollideRight = true;
+            } else if (event.body.id == 4){
+                this.isCollideLeft = true;
+            }
+        });
+    }
+    
+    
+    updatePhysicsBodies() {
+        if (this.physicsBody && this.mesh && this.boxMesh) {
+            const thresholdX = 24.12949999988076;
+            const thresholdNegX = -23.569258788613087;
+            const thresholdZ = -14.074000000059604;
+
+            const smoothFactor = 0.01;
+
+            if (this.mesh.position.x >= thresholdX || this.mesh.position.x <= thresholdNegX || this.mesh.position.z <= thresholdZ || this.isCollideRight == true || this.isCollideLeft == true) {
+                if (this.isCollideRight == true) {
+                    this.physicsBody.position.y = this.mesh.position.y;
+                    this.physicsBodyColl = new CANNON.Vec3(this.physicsBody.position.x, this.physicsBody.position.y, this.physicsBody.position.z - 3);
+                    this.mesh.position.lerp(this.physicsBodyColl, smoothFactor);
+                } else if (this.isCollideLeft == true) {
+                    this.physicsBody.position.y = this.mesh.position.y;
+                    this.physicsBodyColl = new CANNON.Vec3(this.physicsBody.position.x, this.physicsBody.position.y, this.physicsBody.position.z + 1.5);
+                    this.mesh.position.lerp(this.physicsBodyColl, smoothFactor);
+                } else {
+                    this.mesh.position.lerp(this.physicsBody.position, smoothFactor);
+                }
+                
+            } else {
+                this.physicsBody.position.copy(this.mesh.position);
+            }
+
+            this.physicsBody.position.y += 0.6;
+            this.boxMesh.position.copy(this.physicsBody.position);
+        }
     }
 
     update(dt) {
@@ -86,7 +169,7 @@ export class Player {
 
             this.lastRotation = this.mesh.rotation.y;
 
-            console.log(this.state)
+            // console.log(this.state)
 
             if (this.controller.atk == true) {
                 if (this.animations['attack']) {
@@ -191,6 +274,8 @@ export class Player {
             if (this.mixer) {
                 this.mixer.update(dt);
             }
+
+            this.updatePhysicsBodies();
         }
     }
 }
@@ -378,16 +463,16 @@ export class ThirdPersonCamera {
     setup(target, angle, scaleX) {
         if (this.cameraBool2 == true) {
             // buat scene 1
-            // angle.x = 0;
-            // angle.y = 1.6747999999970211;
-            // angle.z = -1.1647999999970193;
-            // gsap.to(angle, {
-            //     z: -0.02349999997764767,
-            //     duration: 4,
-            //     onUpdate: () => {
-            //         this.updateCameraRotation(target, angle, scaleX);
-            //     }
-            // });
+            angle.x = 0;
+            angle.y = 1.6747999999970211;
+            angle.z = -1.1647999999970193;
+            gsap.to(angle, {
+                z: -0.02349999997764767,
+                duration: 4,
+                onUpdate: () => {
+                    this.updateCameraRotation(target, angle, scaleX);
+                }
+            });
 
             
             // buat scene 2
@@ -414,21 +499,22 @@ export class ThirdPersonCamera {
             //     }
             // });
 
-            this.updateCameraRotation(target, angle, scaleX);
+            // this.updateCameraRotation(target, angle, scaleX);
             
 
             // buat debug
-            console.log(angle)
+            // console.log(angle)
 
         } else if (this.cameraBool == true){
             var temp = new THREE.Vector3(0,0,0);
             temp.copy(this.positionOffset);
             // console.log(angle.y);
+
             // buat scene 3
             // angle.y = 0.6140247358370102;
             // gsap.to(angle, {
             //     y: 2.681580906429974,
-            //     duration: 20,
+            //     duration: 10,
             //     onUpdate: () => {
             //         updateScene(this.camera, this.targetOffset);
             //     }
@@ -485,14 +571,14 @@ export class ThirdPersonCamera {
         }
 
         // buat scene 1
-        // temp.x = 22.775404204509293;
-        // temp.y = 2.585568489136311;
-        // temp.z = -9.797282233828415;
+        temp.x = 9.775404204509293;
+        temp.y = 2.585568489136311;
+        temp.z = -6.797282233828415;
 
         // buat scene 2
         // temp.x = 2;
         // temp.y = 1;
-        // temp.z = -7;
+        // temp.z = -6;
 
         // buat scene 4
         // temp.x = -9.960915516630351;

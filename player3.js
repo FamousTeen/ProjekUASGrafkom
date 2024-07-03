@@ -34,8 +34,9 @@ export class Player3 {
             this.mesh = fbx;
             this.scene.add(this.mesh);
             this.mesh.rotation.y += Math.PI / 2;
-            this.mesh.position.z -= 7;
+            this.mesh.position.z -= 6;
             this.mesh.position.y += 0.4;
+            this.mesh.position.x += 6;
             this.mixer = new THREE.AnimationMixer(this.mesh);
 
             var onLoad = (animName, anim) => {
@@ -58,7 +59,7 @@ export class Player3 {
 
             // loader.load('Mutant Roaring celebration.fbx', (fbx) => { onLoad('win', fbx) });
             
-            loader.load('monster death.fbx', (fbx) => { onLoad('lose', fbx) });
+            loader.load('monster1 death.fbx', (fbx) => { onLoad('lose', fbx) });
         });
     }
 
@@ -96,15 +97,16 @@ export class Player3 {
                     }
                     this.mixer.clipAction(this.animations['attack'].clip).play();
                 }
-            } else if (this.controller.win == true) {
-                if (this.animations['win']) {
-                    if (this.state != "win") {
-                        this.mixer.stopAllAction();
-                        this.state = "win";
-                    }
-                    this.mixer.clipAction(this.animations['win'].clip).play();
-                }
             } 
+            // else if (this.controller.win == true) {
+            //     if (this.animations['win']) {
+            //         if (this.state != "win") {
+            //             this.mixer.stopAllAction();
+            //             this.state = "win";
+            //         }
+            //         this.mixer.clipAction(this.animations['win'].clip).play();
+            //     }
+            // } 
             else if (this.controller.lose == true) {
                 if (this.animations['lose']) {
                     if (this.state != "lose") {
@@ -365,7 +367,7 @@ export class PlayerController3 {
 
 
 export class ThirdPersonCamera3 {
-    constructor(camera, positionOffset, targetOffset, isCamera1, isCamera2, isSet, arrayPosition) {
+    constructor(camera, positionOffset, targetOffset, isCamera1, isCamera2, isSet, arrayPosition, scene) {
         this.camera = camera;
         this.positionOffset = positionOffset;
         this.targetOffset = targetOffset;
@@ -373,6 +375,7 @@ export class ThirdPersonCamera3 {
         this.cameraBool2 = isCamera2;
         this.isSet = isSet;
         this.arrayPosition = arrayPosition;
+        this.scene = scene
     }
 
     setup(target, angle, scaleX) {

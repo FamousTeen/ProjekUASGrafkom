@@ -34,8 +34,9 @@ export class Player2 {
             this.mesh = fbx;
             this.scene.add(this.mesh);
             this.mesh.rotation.y += Math.PI / 2;
-            this.mesh.position.z -= 7;
+            this.mesh.position.z -= 6;
             this.mesh.position.y += 0.4;
+            this.mesh.position.x += 1;
             this.mixer = new THREE.AnimationMixer(this.mesh);
 
             var onLoad = (animName, anim) => {
@@ -52,13 +53,11 @@ export class Player2 {
             loader.setPath('./resources_3person/Knight/Monster king/');
             loader.load('Mutant Breathing Idle.fbx', (fbx) => { onLoad('idle', fbx) });
 
-            loader.load('Mutant Breathing Idle.fbx', (fbx) => { onLoad('run', fbx) });
-
             loader.load('Mutant Swiping attack.fbx', (fbx) => { onLoad('attack', fbx) });
 
             loader.load('Mutant Roaring celebration.fbx', (fbx) => { onLoad('win', fbx) });
             
-            loader.load('Mutant Flexing Muscles.fbx', (fbx) => { onLoad('lose', fbx) });
+            loader.load('Mutant Flexing Muscles.fbx', (fbx) => { onLoad('taunt', fbx) });
         });
     }
 
@@ -105,13 +104,13 @@ export class Player2 {
                     this.mixer.clipAction(this.animations['win'].clip).play();
                 }
             } 
-            else if (this.controller.lose == true) {
-                if (this.animations['lose']) {
-                    if (this.state != "lose") {
+            else if (this.controller.taunt == true) {
+                if (this.animations['taunt']) {
+                    if (this.state != "taunt") {
                         this.mixer.stopAllAction();
-                        this.state = "lose";
+                        this.state = "taunt";
                     }
-                    this.mixer.clipAction(this.animations['lose'].clip).play();
+                    this.mixer.clipAction(this.animations['taunt'].clip).play();
                 }
             } 
             else if (direction.x == 0 && direction.z == 0) {
@@ -124,19 +123,9 @@ export class Player2 {
                         this.mixer.clipAction(this.animations['idle'].clip).play();
                     }
                 }
-            } else if (!(direction.x == 0) || !(direction.z == 0)) {
-                if (this.animations['run']) {
-                    if (this.state != "run") {
-                        this.mixer.stopAllAction();
-                        this.state = "run";
-                    }
-                    this.mixer.clipAction(this.animations['run'].clip).play();
-                }
             }
 
-            
-            
-
+        
             if (this.controller.mouseDown) {
                 var dtMouse = this.controller.deltaMousePos;
                 dtMouse.x = dtMouse.x / Math.PI;
@@ -216,7 +205,7 @@ export class PlayerController2 {
         this.arrowRight = false;
         this.atk = false;
         this.win = false;
-        this.lose = false;
+        this.taunt = false;
         this.scaleX = 30;
         this.deltaMousePos = new THREE.Vector2();
         document.addEventListener('keydown', (e) => this.onKeyDown(e), false);
@@ -300,7 +289,7 @@ export class PlayerController2 {
                 break;
             case 84: // Space bar
                 event.preventDefault();
-                this.lose = true;
+                this.taunt = true;
                 break;
         }
     }
@@ -356,7 +345,7 @@ export class PlayerController2 {
                 break;
             case 84: // T Key
                 event.preventDefault();
-                this.lose = false;
+                this.taunt = false;
                 break;
         }
     }

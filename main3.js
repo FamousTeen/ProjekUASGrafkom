@@ -6,6 +6,8 @@ import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
+import * as CANNON from 'cannon-es'; 
+
 
 class Main{
     static WindowResize(){
@@ -14,27 +16,18 @@ class Main{
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
     static init(){
+        document.body.style.overflow = 'hidden';
         var canvReference = document.getElementById("canvas");
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
         this.renderer = new THREE.WebGLRenderer({antialias: true, canvas:canvReference});
-
+        this.isValidBox = false;
+        this.prevPosition = null;
         // kasih shadow
         // this.renderer.shadowMap.enabled = true;  
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        // this.renderer.setClearColor(0x000000, 1);
         const textureLoader = new THREE.TextureLoader();
         this.scene.background = textureLoader.load("resources_3person/Background/background.jpg")
-
-        // const cubeTextureLoader = new THREE.CubeTextureLoader();
-        // this.scene.background = cubeTextureLoader.load ([
-        //     "resources_3person/Background/background2.jpg",
-        //     "resources_3person/Background/background2.jpg",
-        //     "resources_3person/Background/background2.jpg",
-        //     "resources_3person/Background/background2.jpg",
-        //     "resources_3person/Background/background2.jpg",
-        //     "resources_3person/Background/background2.jpg"
-        // ])
         this.renderer.shadowMap.enabled = true;
         var mesh = null;
 
@@ -42,42 +35,106 @@ class Main{
             Main.WindowResize();
           }, false);
 
-        // //Plane
-        // var plane = new THREE.Mesh( new THREE.PlaneGeometry( 100, 100 ), new THREE.MeshPhongMaterial( { color: 0xcbcbcb } ) );
-        // plane.rotation.x = - Math.PI / 2;
-        // plane.receiveShadow = true;
-        // plane.castShadow = true;
-        // this.scene.add( plane );
+        const groundGeo = new THREE.PlaneGeometry(46, 25);
+        const groundMat = new THREE.MeshBasicMaterial({
+            color: 0xffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0
+        });
 
-        // model
-        // let mixer;
+        this.groundMesh = new THREE.Mesh(groundGeo, groundMat);
+        this.scene.add(this.groundMesh);
 
-        // const loader = new FBXLoader();
-        // loader.load('resources_3person/Town/test.fbx', (object) => {
-        //     console.log("FBX model loaded", object);
-        //     mixer = new THREE.AnimationMixer(object);
+        const groundGeo2 = new THREE.PlaneGeometry(70, 50);
+        const groundMat2 = new THREE.MeshBasicMaterial({
+            color: 0xffff,
+            side: THREE.DoubleSide,
+            wireframe: true,
+            transparent: true,
+            opacity: 0
+        });
 
-        //     object.animations.forEach(animation => {
-        //         const action = mixer.clipAction(animation).play();
-        //         action.play();
-        //     });
+        this.groundMesh2 = new THREE.Mesh(groundGeo2, groundMat2);
+        this.scene.add(this.groundMesh2);
 
-        //     object.traverse((child) => {
-        //         if (child.isMesh) {
-        //             child.castShadow = true;
-        //             child.receiveShadow = true;
-        //             // child.scale.set(0.5, 0.5, 0.5)
-        //             // child.scale.set(0.5, 0.5, 0.5)
-        //             // child.rotation.z = -1;
-        //             child.position.y = -10;
-        //         }
-        //     });
+        this.world = new CANNON.World({
+            gravity: new CANNON.Vec3(0, -9.81, 0)
+        });
+        this.world.broadphase = new CANNON.NaiveBroadphase();
+        
+        this.timeStep = 1/60;
 
-        //     this.scene.add(object); // Add the loaded object to the scene here
+        this.groundBody = new CANNON.Body({
+            shape: new CANNON.Plane(),
+            type: CANNON.Body.STATIC
+        });
+        this.world.addBody(this.groundBody);
+        this.groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
+        this.groundBody.position.y += 0.5;
+        this.groundBody.position.z -= 0.75;
 
-        // }, undefined, (error) => {
-        //     console.error("An error happened while loading the FBX model", error);
-        // });
+        this.groundBody2 = new CANNON.Body({
+            shape: new CANNON.Plane(),
+            type: CANNON.Body.STATIC
+        });
+
+        this.world.addBody(this.groundBody2);
+        this.groundBody2.quaternion.setFromEuler(Math.PI / 2, 0, 0)
+        this.groundBody2.position.y -= 12.5;
+        this.groundBody2.position.z -= 0.75;
+
+        const boxGeo2 = new THREE.BoxGeometry(45, 2, 7);
+        const boxGeo3 = new THREE.BoxGeometry(37.5, 2, 7);
+        const boxGeo4 = new THREE.BoxGeometry(29, 2, 5);
+        const boxMat = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            wireframe: false,
+            transparent: true,
+            opacity: 0,
+            depthTest: false,
+            depthWrite: false
+        })
+
+        this.boxMesh2 = new THREE.Mesh(boxGeo2, boxMat);
+        // this.boxMesh2.material = null;
+        this.scene.add(this.boxMesh2);
+
+        this.boxMesh3 = new THREE.Mesh(boxGeo3, boxMat);
+        // this.boxMesh3.material = null;
+        this.scene.add(this.boxMesh3);
+
+        this.boxMesh4 = new THREE.Mesh(boxGeo4, boxMat);
+        this.scene.add(this.boxMesh4);
+
+        this.boxBody2 = new CANNON.Body({ 
+            mass: 0,  
+            shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
+            position: new CANNON.Vec3(1, 2, 8),
+            type: CANNON.Body.STATIC
+        });
+
+        this.boxBody3 = new CANNON.Body({ 
+            mass: 0,  
+            shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
+            position: new CANNON.Vec3(1, 2, 1.5),
+            type: CANNON.Body.STATIC
+        });
+
+        this.boxBody4 = new CANNON.Body({ 
+            mass: 0,  
+            shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
+            position: new CANNON.Vec3(1, 2, -9.5),
+            type: CANNON.Body.STATIC
+        });
+
+
+        this.world.addBody(this.boxBody2);
+
+        this.world.addBody(this.boxBody3);
+
+        this.world.addBody(this.boxBody4);
+
 
         const dracoLoader = new DRACOLoader();
 		dracoLoader.setDecoderPath( 'jsm/libs/draco/gltf/' );
@@ -132,42 +189,33 @@ class Main{
             this.scene,
             5, 
             false, 
-            false
+            false,
+            this.world
         );
 
-        this.player2 = new Player2(
-            new ThirdPersonCamera2(
-                this.camera, new THREE.Vector3(-5, 2, 0), new THREE.Vector3(0, 0, 0), false, false, false, []
-            ),
-            new PlayerController2(),
-            this.scene,
-            5, 
-            false, 
-            false
-        );   
+        // this.player2 = new Player2(
+        //     new ThirdPersonCamera2(
+        //         this.camera, new THREE.Vector3(-5, 2, 0), new THREE.Vector3(0, 0, 0), false, false, false, []
+        //     ),
+        //     new PlayerController2(),
+        //     this.scene,
+        //     5, 
+        //     false, 
+        //     false
+        // );   
 
-        this.player3 = new Player3(
-            new ThirdPersonCamera3(
-                this.camera, new THREE.Vector3(-5, 2, 0), new THREE.Vector3(0, 0, 0), false, false, false, []
-            ),
-            new PlayerController3(),
-            this.scene,
-            5, 
-            false, 
-            false
-        );   
+        // this.player3 = new Player3(
+        //     new ThirdPersonCamera3(
+        //         this.camera, new THREE.Vector3(-5, 2, 0), new THREE.Vector3(0, 0, 0), false, false, false, []
+        //     ),
+        //     new PlayerController3(),
+        //     this.scene,
+        //     5, 
+        //     false, 
+        //     false
+        // );   
 
         this.activePlayer = this.player;
-
-        //Object
-        // this.mesh = new THREE.Mesh(
-        //     new THREE.BoxGeometry(1,1,1),
-        //     new THREE.MeshPhongMaterial({color: 0xFFFF11})
-        // );
-        // this.scene.add(this.mesh);
-        // this.mesh.castShadow = true;
-        // this.mesh.receiveShadow = true;
-        // this.mesh.position.set(3,0,0);
 
         this.onKeyDown = function(event) {
             switch (event.keyCode) {
@@ -183,25 +231,49 @@ class Main{
                     this.activePlayer.camera.cameraBool = false;
                     this.activePlayer.camera.cameraBool2 = true;
                     break;
-                case 66: // Key 'b'
-                    this.switchPlayer();
-                    break;
+                // case 66: // Key 'b'
+                //     if (this.activePlayer === this.player) {
+                //         this.activePlayer = this.player2;
+                //     } else {
+                //         this.activePlayer = this.player;
+                //     }
+                //     break;
+                // case 78: // Key 'n'
+                //     if (this.activePlayer === this.player) {
+                //         this.activePlayer = this.player3;
+                //     } else {
+                //         this.activePlayer = this.player;
+                //     }
+                //     break;
             }
-        }
-
-        this.switchPlayer = function() {
-            if (this.activePlayer === this.player) {
-                this.activePlayer = this.player2;
-            } else {
-                this.activePlayer = this.player;
             }
-        }
 
         document.addEventListener('keydown', (e) => this.onKeyDown(e), false);
     }
 
-    static render(dt) {
+    static render(dt) { 
         this.activePlayer.update(dt);
+
+        this.world.step(dt);
+
+        this.groundMesh.position.copy(this.groundBody.position);
+        this.groundMesh.quaternion.copy(this.groundBody.quaternion);
+
+        this.groundMesh2.position.copy(this.groundBody2.position);
+        this.groundMesh2.quaternion.copy(this.groundBody2.quaternion);
+
+        // this.boxMesh.position.copy(this.boxBody.position);
+        // this.boxMesh.quaternion.copy(this.boxBody.quaternion);
+
+        this.boxMesh2.position.copy(this.boxBody2.position);
+        this.boxMesh2.quaternion.copy(this.boxBody2.quaternion);
+
+        this.boxMesh3.position.copy(this.boxBody3.position);
+        this.boxMesh3.quaternion.copy(this.boxBody3.quaternion);
+
+        this.boxMesh4.position.copy(this.boxBody4.position);
+        this.boxMesh4.quaternion.copy(this.boxBody4.quaternion);
+
         this.renderer.render(this.scene, this.camera);
     }
 }
